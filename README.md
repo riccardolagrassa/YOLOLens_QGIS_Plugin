@@ -11,14 +11,14 @@ YOLOLens is a QGIS plugin designed for automated crater detection using YOLO-bas
 
 ## Step 1 — Download the Pre-trained Models
 
-Before running the plugin, download the required pre-trained `.onnx` and `.pt` model files.
+<code style="color : red">Before running the plugin</code>, download the required pre-trained `.onnx` model files.
 
 📥 **Download the models from Google Drive:**  
 https://drive.google.com/drive/folders/1Qv2VtG53lG7JTX7MxPLhtJj-TZQrNwoy?usp=sharing
 
 ---
 
-## Step 2 — Plugin Installation
+## Step 2 — Manual Plugin Installation (Skip if installed via the QGIS Plugin Repository
 
 ### 🐧 Linux (Ubuntu) Installation
 
