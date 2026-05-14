@@ -1,0 +1,14 @@
+# Standard libraries
+numpy
+pandas
+geopandas
+shapely
+
+# Deep Learning & Inference
+torch
+torchvision
+onnxruntime-gpu[cuda,cudnn]
+gdal
+
+# UI (Standard PyQt5 is used by QGIS)
+PyQt5
