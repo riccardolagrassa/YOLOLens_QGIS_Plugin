@@ -2,7 +2,7 @@
 
 ## Overview
 
-YOLOLens processes large planetary rasters using a tiled deep learning inference pipeline based on ONNX YOLO models integrated inside QGIS.
+YOLOLens processes large planetary rasters using a tiled deep learning inference pipeline based on ONNX YOLOLens models integrated inside QGIS.
 
 The system supports:
 
@@ -11,11 +11,21 @@ The system supports:
 - Super-resolution reconstruction
 - Morphometric parameter extraction
 - GIS visualization
-
 ---
 
-# Global Pipeline
+# Core Technical Concepts
 
+| Component | Purpose |
+|---|---|
+| Sliding Window | Process massive rasters |
+| Tile Overlap | Prevent crater truncation |
+| Hann Window | Seamless SR mosaics |
+| Local NMS | Remove duplicate local boxes |
+| Global IoU Filtering | Remove inter-tile duplicates |
+| Morphometry | Extract crater topology |
+| QGIS Export | GIS visualization |
+
+---
 ```text
 INPUT RASTER
     │
@@ -41,7 +51,7 @@ INPUT RASTER
 
 ---
 
-# 1. Preprocessing
+# Preprocessing
 
 ## Model 1 — Optical Only
 
@@ -61,14 +71,6 @@ Model 2 uses:
 - DTM
 - Hillshade
 
-Input tensor:
-
-```text
-Channel 1 → Optical image
-Channel 2 → Normalized DTM
-Channel 3 → Hillshade
-```
-
 ---
 
 ## DTM Normalization
@@ -82,34 +84,9 @@ MOON_MAX = 10786.0
 dtm_norm = (dtm - MOON_MIN) / (MOON_MAX - MOON_MIN)
 ```
 
-The values are clipped into:
-
-```text
-[0, 1]
-```
-
 ---
 
-## Hillshade Generation
-
-Hillshade is computed from DTM gradients:
-
-```python
-np.gradient(dtm.astype('float32'))
-```
-
-using illumination parameters:
-
-```text
-Azimuth  = 315°
-Altitude = 45°
-```
-
-This enhances crater morphology.
-
----
-
-# 2. Sliding Window Inference
+# Sliding Window Inference
 
 Large planetary rasters cannot be processed simultaneously due to:
 
@@ -153,27 +130,7 @@ Each tile is independently processed.
 
 ---
 
-## Border Padding
-
-Edge tiles smaller than `256×256` are padded:
-
-```python
-padded = np.zeros((3, tile_size, tile_size))
-```
-
-This guarantees fixed ONNX input dimensions.
-
----
-
 # 3. ONNX Inference
-
-Inference is executed using:
-
-```python
-session.run(...)
-```
-
----
 
 ## Model 1 Outputs
 
@@ -199,7 +156,7 @@ Where:
 
 ---
 
-# 4. Super-Resolution Reconstruction
+# Super-Resolution Reconstruction
 
 Model 2 reconstructs full-resolution mosaics from overlapping tiles.
 
@@ -234,22 +191,7 @@ With Hann    → smooth reconstruction
 
 ---
 
-## Weighted Accumulation
-
-```python
-recon += sr_patch * hann_window
-weight_mask += hann_window
-```
-
-Final normalization:
-
-```python
-final = recon / (weight_mask + 1e-8)
-```
-
----
-
-# 5. Local Detection Filtering (NMS)
+# Local Detection Filtering (NMS)
 
 YOLO frequently predicts multiple boxes for the same crater.
 
@@ -287,18 +229,7 @@ If IoU > 0.45
 
 ---
 
-# 6. Global Coordinate Projection
-
-Tile detections are projected back into global raster coordinates:
-
-```python
-'x': (x / sr_factor) + x_idx
-'y': (y / sr_factor) + y_idx
-```
-
----
-
-# 7. Global IoU Deduplication
+# Global IoU Deduplication
 
 Even after local NMS, duplicate detections may still exist across overlapping tiles.
 
@@ -372,7 +303,7 @@ The highest-confidence crater is retained.
 
 ---
 
-# 8. Morphometric Analysis
+# Morphometric Analysis
 
 Available only in Model 2.
 
@@ -386,54 +317,11 @@ Computed parameters include:
 
 ---
 
-## Safe Sampling
-
-The plugin safely extracts DTM regions using:
-
-```python
-sample_rect()
-```
-
----
-
-## NaN Handling
-
-Planetary DTMs may contain:
-
-- invalid pixels
-- gaps
-- missing values
-
-Safe wrappers:
-
-```python
-safe_nanmin()
-safe_nanmax()
-```
-
-prevent runtime failures.
-
----
-
-## d/D Ratio
-
-```text
-d/D = crater_depth / crater_diameter
-```
-
-Implemented as:
-
-```python
-(avg_rim - depth_center) / (D_px * spatial_res)
-```
-
----
-
-# 9. Final QGIS Outputs
+# Final QGIS Outputs
 
 The plugin exports:
 
-## Vector Layer
+### Vector Layer
 
 ```text
 Detected crater points
@@ -448,7 +336,7 @@ including:
 
 ---
 
-## Raster Layers (Model 2)
+### Raster Layers (Model 2)
 
 ```text
 Super-resolved DTM
@@ -459,51 +347,3 @@ These layers are automatically loaded into QGIS.
 
 ---
 
-# Compact Workflow Diagram
-
-```text
-INPUT RASTER
-    ↓
-TILE SPLIT (256, overlap 128)
-    ↓
-NORMALIZATION / HILLSHADE
-    ↓
-ONNX INFERENCE
-    ↓
-LOCAL NMS (IoU 0.45)
-    ↓
-GLOBAL DEDUP (IoU 0.60)
-    ↓
-MORPHOMETRY
-    ↓
-QGIS EXPORT
-```
-
----
-
-# Core Technical Concepts
-
-| Component | Purpose |
-|---|---|
-| Sliding Window | Process massive rasters |
-| Tile Overlap | Prevent crater truncation |
-| Hann Window | Seamless SR mosaics |
-| Local NMS | Remove duplicate local boxes |
-| Global IoU Filtering | Remove inter-tile duplicates |
-| Morphometry | Extract crater topology |
-| QGIS Export | GIS visualization |
-
----
-
-# Summary
-
-YOLOLens combines:
-
-- tiled ONNX inference
-- super-resolution reconstruction
-- multimodal fusion
-- geometric IoU filtering
-- morphometric crater analysis
-
-into a scalable planetary GIS workflow optimized for large-scale crater detection.
-````

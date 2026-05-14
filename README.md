@@ -101,6 +101,10 @@ pip install onnxruntime
 | [specs.md](specs.md) | Technical guide for preprocessing, sliding windows, IoU filtering, and post-processing |
 
 ---
+# Plugin GUI Example
+<img src="yololens_gui.png" width="500">
+
+---
 
 # 🏛️ Institutional Affiliation
 
@@ -141,4 +145,4 @@ For:
 - feature requests
 - support for additional raster or planetary datasets
 
-please send me an email: riccardo.lagrassa@inaf.it
+please email me: riccardo.lagrassa@inaf.it
