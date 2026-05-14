@@ -1,5 +1,4 @@
 # Standard libraries
-numpy
 pandas
 geopandas
 shapely
@@ -8,7 +7,3 @@ shapely
 torch
 torchvision
 onnxruntime-gpu[cuda,cudnn]
-gdal
-
-# UI (Standard PyQt5 is used by QGIS)
-PyQt5

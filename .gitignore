@@ -4,3 +4,6 @@ models/
 __pycache__/
 *.onnx
 *.pt
+README.txt
+modelNetA_modified.py
+inject_IoU_filtering.py

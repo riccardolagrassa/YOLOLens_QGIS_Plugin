@@ -84,7 +84,7 @@ class CraterDetector:
         return action
 
     def initGui(self):
-        icon_path = ':/plugins/crater_detector/yololens.png'
+        icon_path = ':/plugins/crater_detector/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Detect Craters'),

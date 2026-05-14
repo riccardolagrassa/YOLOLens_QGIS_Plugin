@@ -31,7 +31,7 @@ class Ui_CraterDetectorDialogBase(object):
         self.mainLayout.addWidget(self.headerFrame)
 
         # --- MODEL SELECTION GROUP ---
-        self.groupModel = QtWidgets.QGroupBox("Model Configuration")
+        self.groupModel = QtWidgets.QGroupBox("Model Configuration (only for the Moon)")
         self.groupModel.setStyleSheet("font-weight: bold; color: #333;")
         self.modelLayout = QtWidgets.QVBoxLayout(self.groupModel)
         self.modelLayout.setSpacing(10)

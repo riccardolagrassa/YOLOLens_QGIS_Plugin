@@ -2,6 +2,9 @@
 
 YOLOLens is a QGIS plugin designed for automated crater detection using YOLO-based deep learning models. Since the machine learning weights are too large to be hosted directly on GitHub, please follow the installation procedure below to configure and run the plugin locally.
 
+#### Author: Riccardo La Grassa
+#### Affiliation:  Italian National Institute for Astrophysics (INAF) 
+
 ---
 
 # 🚀 Quick Start Guide
@@ -146,3 +149,17 @@ For:
 - support for additional raster or planetary datasets
 
 please email me: riccardo.lagrassa@inaf.it
+
+# License
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
