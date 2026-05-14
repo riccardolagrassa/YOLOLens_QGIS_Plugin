@@ -1,4 +1,4 @@
-# YOLOLens QGIS Plugin 🛰️🌋
+# YOLOLens QGIS Plugin <img src="icon.png" width="24"/>
 
 YOLOLens is a QGIS plugin designed for automated crater detection using YOLO-based deep learning models. Since the machine learning weights are too large to be hosted directly on GitHub, please follow the installation procedure below to configure and run the plugin locally.
 
