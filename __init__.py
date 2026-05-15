@@ -12,7 +12,6 @@
  ***************************************************************************/
 """
 
-import sys
 from qgis.utils import plugins
 from qgis.core import Qgis, QgsMessageLog
 

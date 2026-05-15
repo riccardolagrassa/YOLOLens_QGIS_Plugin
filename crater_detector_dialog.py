@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
-from qgis.PyQt import QtWidgets, QtCore
+from qgis.PyQt import QtWidgets
 from .crater_detector_dialog_base import Ui_CraterDetectorDialogBase
 
 

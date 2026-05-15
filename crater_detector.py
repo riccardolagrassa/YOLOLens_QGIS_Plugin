@@ -10,12 +10,6 @@ import geopandas as gpd
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
 import gc
-
-# Add the plugin directory to the Python path
-plugin_dir = os.path.dirname(__file__)
-if plugin_dir not in sys.path:
-    sys.path.insert(0, plugin_dir)
-
 from osgeo import gdal
 from qgis.PyQt.QtCore import QCoreApplication, QVariant
 from qgis.PyQt.QtGui import QIcon, QColor
@@ -24,10 +18,13 @@ from qgis.core import (QgsVectorLayer, QgsField, QgsFeature, QgsGeometry,
                        QgsPointXY, QgsProject, QgsMarkerSymbol,
                        QgsSimpleMarkerSymbolLayer, QgsProperty,
                        QgsSingleSymbolRenderer, QgsUnitTypes, QgsMessageLog, QgsRasterLayer)
-
-from .craters_util import CratersUtil
-from .resources import *
 from .crater_detector_dialog import CraterDetectorDialog
+import torchvision
+
+# Add the plugin directory to the Python path
+plugin_dir = os.path.dirname(__file__)
+if plugin_dir not in sys.path:
+    sys.path.insert(0, plugin_dir)
 
 
 class CraterDetector:
@@ -39,7 +36,6 @@ class CraterDetector:
         self.onnx_session = None
         self.active_device = ""
         self.available_devices = "None"
-        self.utils = CratersUtil()
         self.current_model_path = ""
         self._hann_cache = {}
         self.detect_hardware()
@@ -59,8 +55,10 @@ class CraterDetector:
             # Get all providers supported by the installed ONNX Runtime
             all_providers = ort.get_available_providers()
             readable = []
-            if 'CUDAExecutionProvider' in all_providers: readable.append("GPU (CUDA)")
-            if 'CPUExecutionProvider' in all_providers: readable.append("CPU")
+            if 'CUDAExecutionProvider' in all_providers:
+                readable.append("GPU (CUDA)")
+            if 'CPUExecutionProvider' in all_providers:
+                readable.append("CPU")
 
             self.available_devices = " & ".join(readable) if readable else "CPU Only"
             # Default active device to the best available
@@ -76,10 +74,14 @@ class CraterDetector:
         action = QAction(icon, text, parent)
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
-        if status_tip: action.setStatusTip(status_tip)
-        if whats_this: action.setWhatsThis(whats_this)
-        if add_to_toolbar: self.iface.addToolBarIcon(action)
-        if add_to_menu: self.iface.addPluginToMenu(self.menu, action)
+        if status_tip:
+            action.setStatusTip(status_tip)
+        if whats_this:
+            action.setWhatsThis(whats_this)
+        if add_to_toolbar:
+            self.iface.addToolBarIcon(action)
+        if add_to_menu:
+            self.iface.addPluginToMenu(self.menu, action)
         self.actions.append(action)
         return action
 
@@ -102,13 +104,12 @@ class CraterDetector:
             import onnxruntime as ort
             try:
                 ort.preload_dlls()
-            except:
+            except (ImportError, AttributeError, RuntimeError):
                 pass
 
             model_path = os.path.join(self.plugin_dir, "models", model_name)
             if not os.path.exists(model_path):
                 model_path = os.path.join(self.plugin_dir, model_name)
-
             if not os.path.exists(model_path):
                 return None
 
@@ -119,10 +120,16 @@ class CraterDetector:
             self.current_model_path = model_path
             actual_providers = self.onnx_session.get_providers()
             readable_providers = []
-            if 'CUDAExecutionProvider' in actual_providers: readable_providers.append("GPU (CUDA)")
-            if 'CPUExecutionProvider' in actual_providers: readable_providers.append("CPU")
+            if 'CUDAExecutionProvider' in actual_providers:
+                readable_providers.append("GPU (CUDA)")
+            if 'CPUExecutionProvider' in actual_providers:
+                readable_providers.append("CPU")
             self.available_devices = ", ".join(readable_providers)
-            self.active_device = "GPU (CUDA)" if actual_providers[0] == 'CUDAExecutionProvider' else "CPU"
+            # self.active_device = "GPU (CUDA)" if actual_providers[0] == 'CUDAExecutionProvider' else "CPU"
+            if actual_providers[0] == 'CUDAExecutionProvider':
+                self.active_device = "GPU (CUDA)"
+            else:
+                self.active_device = "CPU"
 
         return self.onnx_session
 
@@ -210,7 +217,8 @@ class CraterDetector:
 
     def get_hann_window(self, H, W):
         key = (H, W)
-        if key in self._hann_cache: return self._hann_cache[key]
+        if key in self._hann_cache:
+            return self._hann_cache[key]
         wy, wx = np.hanning(H).astype(np.float32), np.hanning(W).astype(np.float32)
         w2d = np.outer(wy, wx)
         w2d /= (w2d.max() + 1e-7)
@@ -219,14 +227,14 @@ class CraterDetector:
 
     def get_local_pred(self, pred, confidence, local_craters_list, y_idx, x_idx, dtm_patch, spatial_res, use_model2, sr_factor):
         x1, y1, x2, y2, conf, cls = pred
-        if conf < confidence: return
+        if conf < confidence:
+            return
         w, h = x2 - x1, y2 - y1
         x, y = x1 + w / 2, y1 + h / 2
 
         if use_model2 and dtm_patch is not None:
             # Only extract morphometric parameters if model 2 is chosen
-            morph = self.utils.process_crater_pixel(row={'x': x, 'y': y, 'w': w, 'h': h},
-                                                    dtm_patch=dtm_patch, spatial_res=spatial_res)
+            morph = self.process_crater_pixel(row={'x': x, 'y': y, 'w': w, 'h': h}, dtm_patch=dtm_patch, spatial_res=spatial_res)
         else:
             # Placeholder parameters for Model 1
             morph = {
@@ -244,6 +252,113 @@ class CraterDetector:
             'conf': conf,
             **morph
         })
+
+    def sample_rect(self, dtm, x1, x2, y1, y2):
+        """Helper for morphometric sampling. Safely expands boundaries to catch pixels."""
+        if dtm is None or dtm.size == 0:
+            return np.array([np.nan], dtype=np.float32)
+
+        # Use floor and ceil to guarantee the bounding window has width/height >= 1
+        x1 = int(max(0, np.floor(x1)))
+        x2 = int(min(dtm.shape[1], np.ceil(x2)))
+        y1 = int(max(0, np.floor(y1)))
+        y2 = int(min(dtm.shape[0], np.ceil(y2)))
+
+        if x1 >= x2 or y1 >= y2:
+            return np.array([np.nan], dtype=np.float32)
+
+        sliced = dtm[y1:y2, x1:x2]
+        if sliced.size == 0:
+            return np.array([np.nan], dtype=np.float32)
+        return sliced
+
+    def safe_nanmax(self, arr, default=-9999.0):
+        """Returns nanmax of array safely, falls back to default if all NaN/empty."""
+        clean_arr = arr[~np.isnan(arr)]
+        if clean_arr.size == 0:
+            return default
+        return float(np.max(clean_arr))
+
+    def safe_nanmin(self, arr, default=-9999.0):
+        """Returns nanmin of array safely, falls back to default if all NaN/empty."""
+        clean_arr = arr[~np.isnan(arr)]
+        if clean_arr.size == 0:
+            return default
+        return float(np.min(clean_arr))
+
+    def process_crater_pixel(self, row, dtm_patch, spatial_res):
+        """
+        Compute morphometric parameters safely for a crater in pixel coordinates.
+        Uses fallback rules to prevent All-NaN slice runtime warnings/errors.
+        """
+        # Set standardized default values in case computations fail
+        result = {
+            'Elevation_Center': -9999.0, 'Elevation_Peak': -9999.0, 'E_Rim_Right': -9999.0,
+            'E_Rim_Left': -9999.0, 'E_Rim_Top': -9999.0, 'E_Rim_Bottom': -9999.0,
+            'avg_Elevation': -9999.0, 'Depth_e_East-Center': -9999.0, 'Depth_e_West-Center': -9999.0,
+            'Depth_e_North-Center': -9999.0, 'Depth_e_South-Center': -9999.0, 'd/D': -9999.0
+        }
+
+        if dtm_patch is None:
+            return result
+
+        try:
+            xc, yc = row['x'], row['y']
+            w, h = row['w'], row['h']
+            D_px = ((w + h) / 2)
+            if D_px <= 0:
+                return result
+
+            xr, xl = xc + w / 2, xc - w / 2
+            yt, yb = yc - h / 2, yc + h / 2
+
+            neighbour = int((1 / 6 * D_px))
+            vals_center = self.sample_rect(dtm_patch, xc - neighbour // 2, xc + neighbour // 2, yc - neighbour // 2,
+                                           yc + neighbour // 2)
+
+            # Use safe wrapper methods to prevent nan warnings
+            depth_center = self.safe_nanmin(vals_center)
+            max_peak = self.safe_nanmax(vals_center)
+
+            rim_band = int(1 / 4 * D_px)
+            depth_rim_right = self.safe_nanmax(
+                self.sample_rect(dtm_patch, xr, xr + rim_band / 2, yc - rim_band / 2, yc + rim_band / 2))
+            depth_rim_left = self.safe_nanmax(
+                self.sample_rect(dtm_patch, xl - rim_band / 2, xl, yc - rim_band / 2, yc + rim_band / 2))
+            depth_rim_top = self.safe_nanmax(
+                self.sample_rect(dtm_patch, xc - rim_band / 2, xc + rim_band / 2, yt - rim_band / 2, yt))
+            depth_rim_bottom = self.safe_nanmax(
+                self.sample_rect(dtm_patch, xc - rim_band / 2, xc + rim_band / 2, yb, yb + rim_band / 2))
+
+            # Compile valid values for the rim to calculate average elevation
+            rim_vals = [val for val in [depth_rim_right, depth_rim_left, depth_rim_top, depth_rim_bottom] if
+                        val != -9999.0]
+
+            if depth_center != -9999.0:
+                avg_rim = float(np.mean(rim_vals))
+
+                result.update({
+                    'Elevation_Center': float(depth_center),
+                    'Elevation_Peak': float(max_peak),
+                    'E_Rim_Right': float(depth_rim_right),
+                    'E_Rim_Left': float(depth_rim_left),
+                    'E_Rim_Top': float(depth_rim_top),
+                    'E_Rim_Bottom': float(depth_rim_bottom),
+                    'avg_Elevation': avg_rim,
+                    'Depth_e_East-Center': float(
+                        depth_rim_right - depth_center) if depth_rim_right != -9999.0 else -9999.0,
+                    'Depth_e_West-Center': float(
+                        depth_rim_left - depth_center) if depth_rim_left != -9999.0 else -9999.0,
+                    'Depth_e_North-Center': float(
+                        depth_rim_top - depth_center) if depth_rim_top != -9999.0 else -9999.0,
+                    'Depth_e_South-Center': float(
+                        depth_rim_bottom - depth_center) if depth_rim_bottom != -9999.0 else -9999.0,
+                    'd/D': float((avg_rim - depth_center) / (D_px * spatial_res))
+                })
+        except Exception:
+            pass
+
+        return result
 
     def run_inference(self, layer, dtm_layer, conf_threshold, session):
         use_model2 = dtm_layer is not None
@@ -331,14 +446,13 @@ class CraterDetector:
                     calc_res = spatial_res
 
                 # 2. Crater Detection
-                results = self.utils.non_max_suppression(torch.from_numpy(yolo_output), conf_threshold, 0.45)
+                results = self.non_max_suppression(torch.from_numpy(yolo_output), conf_threshold, 0.45)
                 if results and results[0] is not None:
                     for det in results[0].cpu().numpy():
-                        # YOLO maps relative to 512 patch dimensions, scale down by factor of 2.0
-                        lx1, ly1, lx2, ly2 = det[0], det[1], det[2], det[3]
-
-                        # Guard to ensure bounding box centers land inside the unpadded boundary area
-                        if lx1 < (win_w*sr_factor) and ly1 < (win_h*sr_factor):
+                        lx1, ly1, lx2, ly2 = det[:4]
+                        limit_w = win_w * sr_factor
+                        limit_h = win_h * sr_factor
+                        if lx1 < limit_w and ly1 < limit_h:
                             self.get_local_pred([lx1, ly1, lx2, ly2, det[4], det[5]], conf_threshold,
                                                 all_detections, y_off, x_off, target_dtm_patch, calc_res, use_model2, sr_factor)
 
@@ -398,6 +512,84 @@ class CraterDetector:
         rlayer = QgsRasterLayer(temp_tif, layer_name)
         QgsProject.instance().addMapLayer(rlayer)
 
+    def non_max_suppression(
+            self,
+            prediction,
+            conf_thres=0.25,
+            iou_thres=0.45,
+            classes=None,
+            agnostic=False,
+            multi_label=False,
+            labels=(),
+            max_det=300,
+            nc=0,
+            max_time_img=0.05,
+            max_nms=30000,
+            max_wh=7680,
+    ):
+        # Checks
+        assert 0 <= conf_thres <= 1
+        assert 0 <= iou_thres <= 1
+
+        if isinstance(prediction, (list, tuple)):
+            prediction = prediction[0]
+
+        device = prediction.device
+        mps = 'mps' in device.type
+        if mps:
+            prediction = prediction.cpu()
+
+        bs = prediction.shape[0]
+        nc = nc or (prediction.shape[1] - 4)
+        nm = prediction.shape[1] - nc - 4
+        mi = 4 + nc
+        xc = prediction[:, 4:mi].amax(1) > conf_thres
+
+        output = [torch.zeros((0, 6 + nm), device=prediction.device)] * bs
+        for xi, x in enumerate(prediction):
+            x = x.transpose(0, -1)[xc[xi]]
+
+            if not x.shape[0]:
+                continue
+
+            box, cls, mask = x.split((4, nc, nm), 1)
+            # Call internal method using self
+            box = self.xywh2xyxy(box)
+
+            if multi_label:
+                i, j = (cls > conf_thres).nonzero(as_tuple=False).T
+                x = torch.cat((box[i], x[i, 4 + j, None], j[:, None].float(), mask[i]), 1)
+            else:
+                conf, j = cls.max(1, keepdim=True)
+                x = torch.cat((box, conf, j.float(), mask), 1)[conf.view(-1) > conf_thres]
+
+            if classes is not None:
+                x = x[(x[:, 5:6] == torch.tensor(classes, device=x.device)).any(1)]
+
+            n = x.shape[0]
+            if not n:
+                continue
+            x = x[x[:, 4].argsort(descending=True)[:max_nms]]
+
+            c = x[:, 5:6] * (0 if agnostic else max_wh)
+            boxes, scores = x[:, :4] + c, x[:, 4]
+            i = torchvision.ops.nms(boxes, scores, iou_thres)
+            i = i[:max_det]
+
+            output[xi] = x[i]
+            if mps:
+                output[xi] = output[xi].to(device)
+
+        return output
+
+    def xywh2xyxy(self, x):
+        y = x.clone() if isinstance(x, torch.Tensor) else np.copy(x)
+        y[..., 0] = x[..., 0] - x[..., 2] / 2
+        y[..., 1] = x[..., 1] - x[..., 3] / 2
+        y[..., 2] = x[..., 0] + x[..., 2] / 2
+        y[..., 3] = x[..., 1] + x[..., 3] / 2
+        return y
+
     def apply_deduplication(self, detections_list, use_model2):
         df = pd.DataFrame(detections_list)
         polys = [Polygon(
@@ -423,7 +615,9 @@ class CraterDetector:
                     node = stack.pop()
                     cluster.append(node)
                     for nei in adj[node]:
-                        if not visited[nei]: visited[nei] = True; stack.append(nei)
+                        if not visited[nei]:
+                            visited[nei] = True
+                            stack.append(nei)
                 sub = gdf.iloc[cluster]
                 best = sub.loc[sub['conf'].idxmax()]
                 poly = unary_union(sub.geometry.tolist())
