@@ -107,7 +107,7 @@ pip install onnxruntime
 
 ## Video
 
-[![]()](video.mp4)
+[Watch the demo video](video.mp4)
 
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
