@@ -107,6 +107,8 @@ pip install onnxruntime
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
 ---
+# Video
+https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=drive_link
 
 # 🏛️ Institutional Affiliation
 
