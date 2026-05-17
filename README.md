@@ -105,7 +105,7 @@ pip install onnxruntime
 
 ---
 ## Video
-[![Alternate Text]({image-url})]({https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=sharing} "Link Title")
+[![Alternate Text]({})]({https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=sharing} "Link Title")
 
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
