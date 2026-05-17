@@ -104,14 +104,12 @@ pip install onnxruntime
 | [specs.md](specs.md) | Technical guide for preprocessing, sliding windows, IoU filtering, and post-processing |
 
 ---
-
 ## Video
 <video width="100%" controls>
-  <source src="https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/raw/main/video.mp4" type="video/mp4">
+  <source src="https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/video.mp4" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
-[![Watch the video](https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/inaf-vettoriale-bianco-trasp.png?raw=true)](https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/video.mp4?raw=1)
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
 
