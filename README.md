@@ -106,8 +106,7 @@ pip install onnxruntime
 ---
 
 ## Video
-[![Watch the video](https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/inaf-vettoriale-bianco-trasp.png)](https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/video.mp4)
-
+[![Watch the video](https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/inaf-vettoriale-bianco-trasp.png?raw=true)](https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/blob/main/video.mp4)
 
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
