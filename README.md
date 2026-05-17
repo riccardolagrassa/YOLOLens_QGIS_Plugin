@@ -107,7 +107,9 @@ pip install onnxruntime
 
 ## Video
 
-[Watch the demo video](video.mp4)
+<video src="https://github.com/riccardolagrassa/YOLOLens_QGIS_Plugin/raw/main/video.mp4" width="100%" controls>
+  Your browser does not support the video tag.
+</video>
 
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
