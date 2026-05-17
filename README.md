@@ -105,10 +105,7 @@ pip install onnxruntime
 
 ---
 ## Video
-<video width="100%" controls>
-  <source src="https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=sharing" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+[![Alternate Text]({image-url})]({https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=sharing} "Link Title")
 
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
