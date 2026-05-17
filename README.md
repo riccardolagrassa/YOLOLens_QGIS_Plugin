@@ -104,11 +104,8 @@ pip install onnxruntime
 | [specs.md](specs.md) | Technical guide for preprocessing, sliding windows, IoU filtering, and post-processing |
 
 ---
-## Video
-<a href="{https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=sharing}" title="Link Title"></a>
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
-
 ---
 
 # 🏛️ Institutional Affiliation
