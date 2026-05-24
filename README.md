@@ -110,6 +110,10 @@ pip install onnxruntime
 # Video
 https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=drive_link
 
+<video src="video.mp4" controls="controls" style="max-width: 100%;">
+  Your browser does not support the video tag.
+</video>
+
 # 🏛️ Institutional Affiliation
 
 This software framework has been developed within the scientific and technological activities of:
