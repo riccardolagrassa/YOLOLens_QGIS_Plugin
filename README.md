@@ -106,13 +106,12 @@ pip install onnxruntime
 ---
 # Plugin GUI Example
 <img src="yololens_gui.png" width="500">
+
 ---
+
 # Video
 https://drive.google.com/file/d/1K5gTS-TLm8oOHJ803Ux_HeGdd7Esj-Lo/view?usp=drive_link
 
-<video src="https://raw.githubusercontent.com/riccardolagrassa/YOLOLens_QGIS_Plugin/main/video.mp4" controls="controls" style="max-width: 100%;">
-  Your browser does not support the video tag.
-</video>
 
 # 🏛️ Institutional Affiliation
 
